@@ -1,5 +1,6 @@
 import cv2 as cv
 import numpy as np
+from scipy.ndimage import minimum_filter
 
 
 class Defog:
@@ -13,11 +14,13 @@ class Defog:
 		self.t_thresh = t_thresh
 
 	def __get_dark_channel(self, im):
-		w = self.window//2
-		im_padding = np.pad(im, [[w, w], [w, w], [0, 0]], mode='reflect')
-		im_dark = np.zeros([self.M, self.N])
-		for i, j in np.ndindex((self.M, self.N)):
-			im_dark[i, j] = np.min(im_padding[i:i+w, j:j+w, :])
+		# w = self.window//2
+		# im_padding = np.pad(im, [[w, w], [w, w], [0, 0]], mode='reflect')
+		# im_dark = np.zeros([self.M, self.N])
+		# for i, j in np.ndindex((self.M, self.N)):
+		# 	im_dark[i, j] = np.min(im_padding[i:i+w, j:j+w, :])\
+		im_dark = np.min(im, axis=2)
+		im_dark = minimum_filter(im_dark, [self.window, self.window])
 
 		return im_dark
 
@@ -43,7 +46,7 @@ class Defog:
 		return (im - a)/t_f + a
 
 	def defog_raw(self):
-		dark = self.__get_dark_channel(engine.im)
+		dark = self.__get_dark_channel(self.im)
 		A = self.__get_atmosphere(dark)
 		t = self.__get_t(A)
 		i_r = self.__recovery(A, t)
@@ -56,7 +59,7 @@ class Defog:
 
 
 if __name__ == "__main__":
-	engine = Defog("images/city_fog.png", window=30, a_thresh=230, omega=0.95, t_thresh=0.1)
+	engine = Defog("images/square_fog.jpg", window=15, a_thresh=230, omega=0.95, t_thresh=0.1)
 	engine.defog_raw()
 
 
