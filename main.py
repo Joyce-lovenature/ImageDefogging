@@ -47,7 +47,7 @@ class Defog:
         im = np.float64(self.im)
         return (im - a) / t_f + a
 
-    def __guided_filter_t(self, t, r = 60, eps = 0.0001):
+    def __guided_filter_t(self, t, r = 120, eps = 0.0001):
         # r: window size
         Gray_img = cv.cvtColor(self.im_ori, cv.COLOR_RGB2GRAY)
         Gray_img = np.float64(Gray_img)/255
@@ -62,6 +62,18 @@ class Defog:
 
         gf_img = a_mean * Gray_img + b_mean
         return gf_img
+
+    def __aug(self, image, min_bound, max_bound):
+        min_bound_pixel = np.percentile(image, min_bound)
+        max_bound_pixel = np.percentile(image, max_bound)
+
+        image[image >= max_bound_pixel] = max_bound_pixel
+        image[image <= min_bound_pixel] = min_bound_pixel
+
+        ret = np.zeros(image.shape, image.dtype)
+        cv.normalize(image, ret, 0.1, 0.99, cv.NORM_MINMAX)
+
+        return ret
 
     def defog_raw(self):
         dark = self.__get_dark_channel(self.im)
@@ -83,11 +95,15 @@ class Defog:
         i_t = self.__recovery(A, t)
         i_gf = self.__recovery(A, Guided_Filtered_T)
 
+        i_gf_2 = self.__aug(i_gf, 1, 99)
+
         print(A)
         cv.imshow("t", t)
         cv.imshow("gf_t", Guided_Filtered_T)
         cv.imshow("defog with t", i_t)
         cv.imshow("defog with gf_t", i_gf)
+        cv.imshow("defog with gf_t_2", i_gf_2)
+
         cv.waitKey(0)
         cv.destroyAllWindows()
 
@@ -110,5 +126,6 @@ class Defog:
 
 
 if __name__ == "__main__":
-    engine = Defog("images/square_fog.jpg", window=15, a_thresh=230, omega=0.95, t_thresh=0.1)
-    engine.defog_soft_matting()
+    engine = Defog("images/canyon2.bmp", window=15, a_thresh=230, omega=0.95, t_thresh=0.1)
+    engine.defog_gf()
+
