@@ -96,10 +96,19 @@ class Defog:
         A = self.__get_atmosphere(dark)
         t = self.__get_t(A)
         soft_matting = SoftMatting(self.im, t, epsilon=0.0001, lamb=0.0001)
-        L = soft_matting.get_laplacian()
-        return L
+        t_sm = soft_matting.get_t()
+        i_t = self.__recovery(A, t)
+        i_sm = self.__recovery(A, t_sm)
+
+        print(A)
+        cv.imshow("t", t)
+        cv.imshow("sm_t", t_sm)
+        cv.imshow("defog with t", i_t)
+        cv.imshow("defog with sm_t", i_sm)
+        cv.waitKey(0)
+        cv.destroyAllWindows()
 
 
 if __name__ == "__main__":
-    engine = Defog("images/city_fog.png", window=15, a_thresh=230, omega=0.95, t_thresh=0.1)
-    L = engine.defog_soft_matting()
+    engine = Defog("images/square_fog.jpg", window=15, a_thresh=230, omega=0.95, t_thresh=0.1)
+    engine.defog_soft_matting()
