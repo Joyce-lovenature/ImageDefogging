@@ -1,12 +1,14 @@
 import cv2 as cv
 import numpy as np
 from scipy.ndimage import minimum_filter
+from soft_matting import SoftMatting
 
 
 class Defog:
 	def __init__(self, path, window, a_thresh, omega, t_thresh):
 		self.im = cv.imread(path)
 		self.im = self.im.astype('float64')/255
+		cv.imshow("im", self.im)
 		self.M, self.N, _ = self.im.shape
 		self.window = window
 		self.a_thresh = a_thresh
@@ -56,11 +58,16 @@ class Defog:
 		cv.imshow("i_r", i_r)
 		cv.waitKey(0)
 		cv.destroyAllWindows()
+		return t
 
 
 if __name__ == "__main__":
 	engine = Defog("images/square_fog.jpg", window=15, a_thresh=230, omega=0.95, t_thresh=0.1)
-	engine.defog_raw()
+	t = engine.defog_raw()
+	# im = cv.imread("images/square_fog.jpg")
+	# im = im.astype('float64') / 255
+	# soft_matting = SoftMatting(im, t, epsilon=0.0001, lamb=0.0001)
+	# L = soft_matting.get_laplacian()
 
 
 
