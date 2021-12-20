@@ -67,19 +67,39 @@ class Defog:
         dark = self.__get_dark_channel(self.im)
         A = self.__get_atmosphere(dark)
         t = self.__get_t(A)
+        i_t = self.__recovery(A, t)
+
+        print(A)
+        cv.imshow("t", t)
+        cv.imshow("defog with t", i_t)
+        cv.waitKey(0)
+        cv.destroyAllWindows()
+
+    def defog_gf(self):
+        dark = self.__get_dark_channel(self.im)
+        A = self.__get_atmosphere(dark)
+        t = self.__get_t(A)
         Guided_Filtered_T = self.__guided_filter_t(t)
         i_t = self.__recovery(A, t)
         i_gf = self.__recovery(A, Guided_Filtered_T)
 
         print(A)
         cv.imshow("t", t)
+        cv.imshow("gf_t", Guided_Filtered_T)
         cv.imshow("defog with t", i_t)
         cv.imshow("defog with gf_t", i_gf)
         cv.waitKey(0)
         cv.destroyAllWindows()
 
+    def defog_soft_matting(self):
+        dark = self.__get_dark_channel(self.im)
+        A = self.__get_atmosphere(dark)
+        t = self.__get_t(A)
+        soft_matting = SoftMatting(self.im, t, epsilon=0.0001, lamb=0.0001)
+        L = soft_matting.get_laplacian()
+        return L
 
 
 if __name__ == "__main__":
-    engine = Defog("images/square_fog.jpg", window=15, a_thresh=230, omega=0.95, t_thresh=0.1)
-    engine.defog_raw()
+    engine = Defog("images/city_fog.png", window=15, a_thresh=230, omega=0.95, t_thresh=0.1)
+    L = engine.defog_soft_matting()
