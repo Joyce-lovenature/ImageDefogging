@@ -39,21 +39,21 @@ class SoftMatting:
 					cov = (np.dot(diff, diff.T) / w_k) + U
 					L_elem = np.eye(w_k) - (1 + np.dot(np.dot(diff.T, np.linalg.inv(cov)), diff)) / w_k
 					x = indexs[i:i + window_size, j:j + window_size].flatten()
-					y = np.tile(x, 9).reshape(9, 9)
-					x = y.T
+					x = np.tile(x, 9).reshape(9, 9)
+					y = x.T
 					row = np.append(row, x.flatten())
 					col = np.append(col, y.flatten())
 					data = np.append(data, L_elem.flatten())
-					break
 				pbar.update()
 		L = csc_matrix((data, (row, col)), shape=(self.N, self.N))
 		return L
 
 	def get_t(self):
-		# L = self.__get_laplacian()
-		L = csc_matrix((self.N, self.N))
+		L = self.__get_laplacian().todense()
+		# L = csc_matrix((self.N, self.N))
 		t_reshaped = self.t.reshape(1, self.N)
-		T = self.lamb * np.dot(t_reshaped, inv(L + self.lamb * identity(self.N)))
+		T = self.lamb * np.dot(t_reshaped, np.linalg.inv(L + self.lamb * np.eye(self.N)))
+		T = T.reshape(self.W, self.H)
 		return T
 
 

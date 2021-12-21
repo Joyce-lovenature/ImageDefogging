@@ -107,25 +107,30 @@ class Defog:
         cv.waitKey(0)
         cv.destroyAllWindows()
 
-    def defog_soft_matting(self):
+    def defog_soft_matting(self, scale = 9):
         dark = self.__get_dark_channel(self.im)
         A = self.__get_atmosphere(dark)
         t = self.__get_t(A)
-        soft_matting = SoftMatting(self.im, t, epsilon=0.0001, lamb=0.0001)
-        t_sm = soft_matting.get_t()
-        i_t = self.__recovery(A, t)
+        im_resized = cv.resize(self.im, [self.M//scale, self.N//scale])
+        t_resized = cv.resize(t, [self.M//scale, self.N//scale])
+        soft_matting = SoftMatting(im_resized, t_resized, epsilon=0.0001, lamb=0.0001)
+        t_sm_ = soft_matting.get_t()
+        t_sm = cv.resize(t_sm_, [self.N, self.M], interpolation=cv.INTER_CUBIC)
         i_sm = self.__recovery(A, t_sm)
 
+        i_sm_2 = self.__aug(i_sm, 1, 99)
+
         print(A)
+        cv.imshow("original", self.im)
         cv.imshow("t", t)
         cv.imshow("sm_t", t_sm)
-        cv.imshow("defog with t", i_t)
         cv.imshow("defog with sm_t", i_sm)
+        cv.imshow("defog with sm_t 2", i_sm_2)
         cv.waitKey(0)
         cv.destroyAllWindows()
 
 
 if __name__ == "__main__":
-    engine = Defog("images/canyon2.bmp", window=15, a_thresh=230, omega=0.95, t_thresh=0.1)
-    engine.defog_gf()
+    engine = Defog("images/Org images/ny1.bmp", window=15, a_thresh=230, omega=0.95, t_thresh=0.1)
+    engine.defog_soft_matting()
 
